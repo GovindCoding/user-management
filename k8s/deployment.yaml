@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-management
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-management
+  template:
+    metadata:
+      labels:
+        app: user-management
+    spec:
+      containers:
+        - name: user-management
+          image: ghcr.io/GovindCoding/user-management:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql.default.svc.cluster.local:3306/userdb?useSSL=false&serverTimezone=UTC
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: user-management-secret
+                  key: spring.datasource.username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: user-management-secret
+                  key: spring.datasource.password
+            - name: APP_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: user-management-secret
+                  key: app.jwt.secret
+            - name: ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: user-management-secret
+                  key: admin.username
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: user-management-secret
+                  key: admin.email
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: user-management-secret
+                  key: admin.password
+          ports:
+            - containerPort: 8080

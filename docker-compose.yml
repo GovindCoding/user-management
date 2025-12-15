@@ -1,0 +1,39 @@
+version: "3.9"
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: userdb
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_USER: app
+      MYSQL_PASSWORD: apppass
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db-data:/var/lib/mysql
+
+  app:
+    build: .
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/userdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_DATASOURCE_PASSWORD: apppass
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      APP_JWT_SECRET: ReplaceWithStrongSecretAtRuntime
+      APP_JWT_EXPIRATION_MS: 3600000
+      APP_JWT_REFRESH_EXPIRATION_MS: 86400000
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
